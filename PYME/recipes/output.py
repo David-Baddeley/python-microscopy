@@ -506,3 +506,20 @@ class ReportForEachOutput(OutputModule):
             
             with open(out_filename, 'w') as f:
                 f.write(template.render(data=c, img=img))
+
+
+@register_module('DebugOutput')
+class DebugOutput(OutputModule):
+    """
+    
+    Essentially a no-op recipe module for use in testing of distributed recipe execution. Implemented as an output module
+    so that we can use it without having to worry about input files.
+    
+    Sleeps for a period of time then logs a debug message.
+    
+    """
+    delay_time = Float(0.01)
+    def save(self, namespace, context={}):
+        import time
+        time.sleep(self.delay_time)
+        logger.info('Debug Recipe Module')
