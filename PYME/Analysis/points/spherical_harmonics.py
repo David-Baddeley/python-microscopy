@@ -781,7 +781,7 @@ class ScaledShell(object):
         #pre-allocate and output array
         counts = np.zeros(len(bin_edges)-1, 'i4')
 
-        for i in range(n_batches):
+        for i in range(int(n_batches)):
             # simulate batch_size uniformly distributed points within a bounding cube
             x = np.random.uniform(bounds.x0, bounds.x0 + cube_size, batch_size)
             y = np.random.uniform(bounds.y0, bounds.y0 + cube_size, batch_size)
