@@ -23,7 +23,7 @@ AppId={{8F3A2E1D-6B4C-4D9F-A7E2-3C1B5F8A2D6E}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
-DefaultDirName={autopf}\{#AppName}
+DefaultDirName={userprofile}\PYME
 DefaultGroupName={#AppName}
 ; Per-user install by default; elevation dialog allows all-users install.
 PrivilegesRequired=lowest
@@ -38,10 +38,11 @@ CloseApplications=no
 [Files]
 Source: "{#AppSourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
+; Shortcuts target venv .exe stubs directly — .cmd wrappers are unreliable as shortcut targets.
 [Icons]
-Name: "{group}\PYMEAcquire";      Filename: "{app}\PYMEAcquire.cmd";      IconFilename: "{#IconsDir}\pmacquire.ico"
-Name: "{group}\PYMEImage";        Filename: "{app}\PYMEImage.cmd";        IconFilename: "{#IconsDir}\pmanal.ico"
-Name: "{group}\PYMEVis";          Filename: "{app}\PYMEVis.cmd";          IconFilename: "{#IconsDir}\pmvis.ico"
-Name: "{group}\PYMEClusterOfOne"; Filename: "{app}\PYMEClusterOfOne.cmd"; IconFilename: "{#IconsDir}\pmanal.ico"
-Name: "{group}\PYME Console";     Filename: "{app}\pyme-console.cmd";     IconFilename: "{#IconsDir}\pmanal.ico"
+Name: "{group}\PYMEAcquire";      Filename: "{app}\venv\Scripts\PYMEAcquire.exe";      WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmacquire.ico"
+Name: "{group}\PYMEImage";        Filename: "{app}\venv\Scripts\PYMEImage.exe";        WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
+Name: "{group}\PYMEVis";          Filename: "{app}\venv\Scripts\PYMEVis.exe";          WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmvis.ico"
+Name: "{group}\PYMEClusterOfOne"; Filename: "{app}\venv\Scripts\PYMEClusterOfOne.exe"; WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
+Name: "{group}\PYME Console";     Filename: "{sys}\cmd.exe"; Parameters: "/k ""{app}\venv\Scripts\activate.bat"""; WorkingDir: "{userprofile}"; IconFilename: "{#IconsDir}\pmanal.ico"
 Name: "{group}\Uninstall PYME";   Filename: "{uninstallexe}"
