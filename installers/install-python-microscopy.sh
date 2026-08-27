@@ -45,7 +45,7 @@ fi
 
 # --- Standalone Python installation via py-app-standalone ---
 echo "==> Creating standalone Python installation..."
-uv tool run py-app-standalone --python-version "$TARGET_PYTHON" --target "$DEST" "$PACKAGE_NAME"
+uv tool run py-app-standalone --python-version "$TARGET_PYTHON" --target "$DEST" --force "$PACKAGE_NAME"
 
 # --- Normalize cpython-* to a stable directory name ---
 PYTHON_DIRS=( "$DEST"/cpython-* )

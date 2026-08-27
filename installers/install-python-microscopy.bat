@@ -25,7 +25,7 @@ if not errorlevel 1 (
 
 :: ---- Standalone Python installation via py-app-standalone ----
 echo Creating standalone Python installation...
-"!UV!" tool run py-app-standalone --python-version !TARGET_PYTHON! --target "!DEST!" !PACKAGE_NAME!
+"!UV!" tool run py-app-standalone --python-version !TARGET_PYTHON! --target "!DEST!" --force !PACKAGE_NAME!
 if errorlevel 1 (echo ERROR: py-app-standalone failed & exit /b 1)
 
 :: ---- Normalize cpython-* to a stable directory name ----
