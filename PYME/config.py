@@ -104,6 +104,28 @@ method of plugiin registration is supported for backwards compatibility only - n
 <plugin-name>.yaml config file as detailed below.
 
 
+pyproject.toml entry points (preferred for pip/wheel packages)
+-------------------------------------------------------------
+
+The recommended approach for pip-installable plugins is to declare ``importlib.metadata`` entry points in
+``pyproject.toml``. PYME will discover them automatically on startup without any file copying or user action,
+and this works correctly for both regular and editable installs.
+
+.. code-block:: toml
+
+    [project.entry-points."pyme.plugins.recipes"]
+    myplugin = "mypackage.recipe_modules"
+    myplugin_extra = "mypackage.extra_modules"
+
+    [project.entry-points."pyme.plugins.visgui"]
+    myplugin = "mypackage.visgui_modules"
+
+Supported groups are ``pyme.plugins.visgui``, ``pyme.plugins.dsviewer``, ``pyme.plugins.recipes``,
+and ``pyme.plugins.fit_factories``. The entry point *name* (left-hand side) is ignored; the *value*
+(right-hand side) is the fully qualified module path to import. A ``:attr`` suffix is accepted but
+ignored — only the module path is used.
+
+
 plugins/<plugin-name>.yaml
 --------------------------
 
@@ -252,6 +274,7 @@ import shutil
 import sys
 import glob
 import importlib
+from importlib.metadata import entry_points
 
 site_config_directory = '/etc/PYME'
 site_config_file = '/etc/PYME/config.yaml'
@@ -462,6 +485,14 @@ def _parse_plugin_config():
         for app in ['visgui', 'dsviewer', 'recipes']: 
             plugins[app] = plugins.get(app, set()) | set(_get_app_txt_plugins(app))
 
+    # discover plugins registered via importlib.metadata entry points (pip/wheel packages)
+    for app in ['visgui', 'dsviewer', 'recipes', 'fit_factories']:
+        for ep in entry_points(group='pyme.plugins.%s' % app):
+            try:
+                plugins[app].add(ep.value.split(':')[0])
+            except Exception:
+                logger.warning('Failed to register entry point plugin %r for %s' % (ep, app))
+
 _parse_plugin_config()
                 
                 
@@ -473,15 +504,23 @@ def get_plugin_template_paths():
 
 def get_plugins(application):
     """
-    Get a list of plugins for a given application
+    Get a list of plugins for a given application.
 
-    Modules are registered by adding fully resolved module paths (one per line) to a text file in the relevant directory.
-    The code searches **all** files in the relevant directories, and the intention is that there is one registration file
-    for each standalone package that provides modules and can e.g. be conda or pip-installed which contains a list of all
-    the plugins that package provides. The registration filename should ideally be the same as the package name, although
-    further subdivision for large packages is fine. registration filenames should however be unique - e.g. by prefixing
-    with the package name. By structuring it this way, a package can add this file to the ``anaconda/etc/PYME/plugins/XXX/``
-    folder through the standard conda packaging tools and it will be automatically discovered without conflicts
+    Plugins are discovered from three sources, all merged into the returned set:
+
+    1. **importlib.metadata entry points** (preferred for pip/wheel packages). Declare in ``pyproject.toml``::
+
+           [project.entry-points."pyme.plugins.recipes"]
+           myplugin = "mypackage.recipe_modules"
+
+       Supported groups: ``pyme.plugins.visgui``, ``pyme.plugins.dsviewer``,
+       ``pyme.plugins.recipes``, ``pyme.plugins.fit_factories``.
+
+    2. **YAML config files** (``plugins/<name>.yaml`` in any config directory): preferred for conda packages.
+
+    3. **Legacy .txt files** (``plugins/<app>/<name>.txt``): supported for backwards compatibility only.
+
+    In all cases the module is *not* imported here; callers perform the actual import at load time.
 
     Parameters
     ----------
@@ -490,7 +529,7 @@ def get_plugins(application):
 
     Returns
     -------
-    list of fully resolved module paths
+    set of fully resolved module paths
 
     """
     return plugins[application]
