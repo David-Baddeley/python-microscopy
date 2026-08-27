@@ -23,7 +23,7 @@ AppId={{8F3A2E1D-6B4C-4D9F-A7E2-3C1B5F8A2D6E}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
-DefaultDirName={userprofile}\PYME
+DefaultDirName={%USERPROFILE}\PYME
 DefaultGroupName={#AppName}
 ; Per-user install by default; elevation dialog allows all-users install.
 PrivilegesRequired=lowest
@@ -43,5 +43,5 @@ Name: "{group}\PYMEAcquire";      Filename: "{app}\python\Scripts\PYMEAcquire.ex
 Name: "{group}\PYMEImage";        Filename: "{app}\python\Scripts\PYMEImage.exe";        WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
 Name: "{group}\PYMEVis";          Filename: "{app}\python\Scripts\PYMEVis.exe";          WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmvis.ico"
 Name: "{group}\PYMEClusterOfOne"; Filename: "{app}\python\Scripts\PYMEClusterOfOne.exe"; WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
-Name: "{group}\PYME Console";     Filename: "{sys}\cmd.exe"; Parameters: "/k set ""PATH={app}\python;{app}\python\Scripts;%PATH%"""; WorkingDir: "{userprofile}"; IconFilename: "{#IconsDir}\pmanal.ico"
+Name: "{group}\PYME Console";     Filename: "{sys}\cmd.exe"; Parameters: "/k set ""PATH={app}\python;{app}\python\Scripts;%PATH%"""; WorkingDir: "{%USERPROFILE}"; IconFilename: "{#IconsDir}\pmanal.ico"
 Name: "{group}\Uninstall PYME";   Filename: "{uninstallexe}"
