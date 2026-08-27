@@ -88,7 +88,8 @@ automatically found in ``PYME.LMVis.Extras`` or ``PYMEnf.LMVis.Extras`` [#pymenf
 
 .. note::
 
-    A more flexible method for discovering VisGUI plugins is on the TODO list.
+    External packages should register VisGUI plugins via the mechanisms described in :ref:`plugins`.
+    Plugins placed in ``PYME.LMVis.Extras`` or ``PYMEnf.LMVis.Extras`` [#pymenf]_ continue to be discovered automatically.
 
 
 Plugins which use the output of the pipeline

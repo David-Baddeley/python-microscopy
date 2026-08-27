@@ -104,7 +104,7 @@ method of plugiin registration is supported for backwards compatibility only - n
 <plugin-name>.yaml config file as detailed below.
 
 
-pyproject.toml entry points (preferred for pip/wheel packages)
+pyproject.toml entry points (recommended for all packages)
 -------------------------------------------------------------
 
 The recommended approach for pip-installable plugins is to declare ``importlib.metadata`` entry points in
@@ -508,7 +508,8 @@ def get_plugins(application):
 
     Plugins are discovered from three sources, all merged into the returned set:
 
-    1. **importlib.metadata entry points** (preferred for pip/wheel packages). Declare in ``pyproject.toml``::
+    1. **importlib.metadata entry points** (recommended — works for pip, conda, and editable installs).
+       Declare in ``pyproject.toml``::
 
            [project.entry-points."pyme.plugins.recipes"]
            myplugin = "mypackage.recipe_modules"
@@ -516,7 +517,8 @@ def get_plugins(application):
        Supported groups: ``pyme.plugins.visgui``, ``pyme.plugins.dsviewer``,
        ``pyme.plugins.recipes``, ``pyme.plugins.fit_factories``.
 
-    2. **YAML config files** (``plugins/<name>.yaml`` in any config directory): preferred for conda packages.
+    2. **YAML config files** (``plugins/<name>.yaml`` in any config directory): required for ``reports``
+       plugins; otherwise legacy.
 
     3. **Legacy .txt files** (``plugins/<app>/<name>.txt``): supported for backwards compatibility only.
 

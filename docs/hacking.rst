@@ -7,6 +7,7 @@ Extending PYME and writing plugins
    Contributing
    DataModel
    WritingRecipeModules
+   plugins
    ExtendingDsviewer
    ExtendingVisGUI
    api/PYME.config
