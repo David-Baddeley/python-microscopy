@@ -43,26 +43,25 @@ if ! command -v uv &>/dev/null; then
     fi
 fi
 
-# --- Managed Python ---
-uv python install "$TARGET_PYTHON"
+# --- Standalone Python installation via py-app-standalone ---
+echo "==> Creating standalone Python installation..."
+uv tool run py-app-standalone --python-version "$TARGET_PYTHON" --target "$DEST" "$PACKAGE_NAME"
 
-# --- Virtual environment ---
-uv venv --python "$TARGET_PYTHON" "$DEST/venv"
-
-# --- Install PYME from pip ---
-echo "==> Installing $PACKAGE_NAME..."
-uv pip install --python "$DEST/venv/bin/python" "$PACKAGE_NAME"
+# --- Normalize cpython-* to a stable directory name ---
+PYTHON_DIRS=( "$DEST"/cpython-* )
+[[ -d "${PYTHON_DIRS[0]}" ]] || { echo "ERROR: standalone Python directory not found" >&2; exit 1; }
+mv "${PYTHON_DIRS[0]}" "$DEST/python"
 
 # --- Top-level entry point symlinks ---
 for ep in "${ENTRY_POINTS[@]}"; do
-    ln -sf "$DEST/venv/bin/$ep" "$DEST/$ep"
+    ln -sf "$DEST/python/bin/$ep" "$DEST/$ep"
 done
 
-# --- Activated-shell helper ---
+# --- Shell helper (adds python/bin to PATH) ---
 cat > "$DEST/pyme-shell" <<'SHELL_SCRIPT'
 #!/usr/bin/env bash
 PYME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$PYME_DIR/venv/bin/activate"
+export PATH="$PYME_DIR/python/bin:$PATH"
 exec "${SHELL:-bash}"
 SHELL_SCRIPT
 chmod +x "$DEST/pyme-shell"

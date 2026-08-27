@@ -13,9 +13,9 @@
 
 #define AppName      "PYME"
 #define AppPublisher "Baddeley Lab, University of Auckland"
-; Icons ship with the package inside the venv tree.
+; Icons ship with the package inside the standalone Python tree.
 ; pymeLogo.png has no .ico equivalent — pmanal.ico is used in its place.
-#define IconsDir     "{app}\venv\Lib\site-packages\PYME\resources\icons"
+#define IconsDir     "{app}\python\Lib\site-packages\PYME\resources\icons"
 
 [Setup]
 ; AppId uniquely identifies this application for upgrades and uninstall — do not change.
@@ -38,11 +38,10 @@ CloseApplications=no
 [Files]
 Source: "{#AppSourceDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
-; Shortcuts target venv .exe stubs directly — .cmd wrappers are unreliable as shortcut targets.
 [Icons]
-Name: "{group}\PYMEAcquire";      Filename: "{app}\venv\Scripts\PYMEAcquire.exe";      WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmacquire.ico"
-Name: "{group}\PYMEImage";        Filename: "{app}\venv\Scripts\PYMEImage.exe";        WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
-Name: "{group}\PYMEVis";          Filename: "{app}\venv\Scripts\PYMEVis.exe";          WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmvis.ico"
-Name: "{group}\PYMEClusterOfOne"; Filename: "{app}\venv\Scripts\PYMEClusterOfOne.exe"; WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
-Name: "{group}\PYME Console";     Filename: "{sys}\cmd.exe"; Parameters: "/k ""{app}\venv\Scripts\activate.bat"""; WorkingDir: "{userprofile}"; IconFilename: "{#IconsDir}\pmanal.ico"
+Name: "{group}\PYMEAcquire";      Filename: "{app}\python\Scripts\PYMEAcquire.exe";      WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmacquire.ico"
+Name: "{group}\PYMEImage";        Filename: "{app}\python\Scripts\PYMEImage.exe";        WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
+Name: "{group}\PYMEVis";          Filename: "{app}\python\Scripts\PYMEVis.exe";          WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmvis.ico"
+Name: "{group}\PYMEClusterOfOne"; Filename: "{app}\python\Scripts\PYMEClusterOfOne.exe"; WorkingDir: "{app}"; IconFilename: "{#IconsDir}\pmanal.ico"
+Name: "{group}\PYME Console";     Filename: "{sys}\cmd.exe"; Parameters: "/k set ""PATH={app}\python;{app}\python\Scripts;%PATH%"""; WorkingDir: "{userprofile}"; IconFilename: "{#IconsDir}\pmanal.ico"
 Name: "{group}\Uninstall PYME";   Filename: "{uninstallexe}"

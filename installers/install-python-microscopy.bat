@@ -23,27 +23,23 @@ if not errorlevel 1 (
     if errorlevel 1 exit /b 1
 )
 
-:: ---- Managed Python + virtual environment ----
-echo Installing Python !TARGET_PYTHON!...
-"!UV!" python install !TARGET_PYTHON!
-if errorlevel 1 (echo ERROR: uv python install failed & exit /b 1)
+:: ---- Standalone Python installation via py-app-standalone ----
+echo Creating standalone Python installation...
+"!UV!" tool run py-app-standalone --python-version !TARGET_PYTHON! --target "!DEST!" !PACKAGE_NAME!
+if errorlevel 1 (echo ERROR: py-app-standalone failed & exit /b 1)
 
-echo Creating virtual environment...
-"!UV!" venv --python !TARGET_PYTHON! "!DEST!\venv"
-if errorlevel 1 (echo ERROR: venv creation failed & exit /b 1)
-
-:: ---- Install PYME from pip ----
-echo Installing !PACKAGE_NAME!...
-"!UV!" pip install --python "!DEST!\venv\Scripts\python.exe" !PACKAGE_NAME!
-if errorlevel 1 (echo ERROR: package installation failed & exit /b 1)
+:: ---- Normalize cpython-* to a stable directory name ----
+for /d %%d in ("!DEST!\cpython-*") do move "%%d" "!DEST!\python" >nul
+if not exist "!DEST!\python\" (echo ERROR: standalone Python directory not found & exit /b 1)
 
 :: ---- Entry point .cmd wrappers ----
 for %%e in (%ENTRY_POINTS%) do call :mk_wrapper "%%e"
 
-:: ---- Activated-console helper ----
+:: ---- Console helper (adds python dir to PATH for the session) ----
 (
     echo @echo off
-    echo start cmd.exe /k "%%~dp0venv\Scripts\activate.bat"
+    echo set "PATH=%%~dp0python;%%~dp0python\Scripts;%%PATH%%"
+    echo cmd.exe /k
 ) > "!DEST!\pyme-console.cmd"
 
 echo.
@@ -72,11 +68,10 @@ exit /b 0
 
 :: ----------------------------------------------------------------
 :mk_wrapper
-:: Writes a thin .cmd shim that forwards all arguments to the venv entry point exe.
-:: Uses %~dp0 so wrappers work even if the install folder is moved.
+:: Uses %~dp0 so wrappers stay valid if the install folder is moved.
 set "_EP=%~1"
 (
     echo @echo off
-    echo "%%~dp0venv\Scripts\!_EP!.exe" %%*
+    echo "%%~dp0python\Scripts\!_EP!.exe" %%*
 ) > "!DEST!\!_EP!.cmd"
 exit /b 0

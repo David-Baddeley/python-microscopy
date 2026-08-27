@@ -30,7 +30,7 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $v = & "bundle\venv\Scripts\python.exe" `
+          $v = & "bundle\python\python.exe" `
             -c "import importlib.metadata; print(importlib.metadata.version('python-microscopy'))"
           "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
