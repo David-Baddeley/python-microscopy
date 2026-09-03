@@ -59,19 +59,8 @@ py_sources = files(
 
 py.install_sources(py_sources, subdir:'PYME/Deconv')
 
-py_sources = files(
-    'simulation/__init__.py',
-    'simulation/wormlike.py',
-    'simulation/wormlike2.py',
-    'simulation/wormlike3.py',
-    'simulation/pointsets.py',
-    'simulation/wormlike_curled.py',
-    'simulation/locify.py',
-    'simulation/image_gen.py',
-    'simulation/cameranoise.py',
-)
+subdir('simulation')
 
-py.install_sources(py_sources, subdir:'PYME/simulation')
 
 py_sources = files(
     'misc/pyme_zeroconf.py',

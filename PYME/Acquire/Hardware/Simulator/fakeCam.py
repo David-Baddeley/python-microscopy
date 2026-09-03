@@ -61,7 +61,7 @@ class compThread(threading.Thread):
         threading.Thread.__init__(self)
         self.XVals = XVals
         self.YVals = YVals
-        self.fluors = fluors # type: PYME.Acquire.Hardware.Simulator.fluor.Fluorophores
+        self.fluors = fluors # type: PYME.simulation.fluorophores.Fluorophores
         self.objects = objects #list of Fluorophores instances
         #self.zPos = zPos
         self.laserPowers = laserPowers

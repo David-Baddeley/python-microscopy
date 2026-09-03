@@ -23,7 +23,7 @@
 
 from PYME.Analysis.PSFGen import *
 from numpy.fft import ifftshift, fftn, ifftn
-from . import fluor
+from PYME.simulation import fluorophores as fluor
 from PYME.Analysis import MetaData
 from PYME.localization import cInterp
 

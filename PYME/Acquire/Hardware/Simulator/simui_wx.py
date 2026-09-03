@@ -20,7 +20,7 @@ import PYME.ui.manualFoldPanel as afp
 [wxID_DSIMCONTROLTREFRESH] = [wx.NewIdRef() for _init_utils in range(1)]
 
 import numpy as np
-from . import fluor
+from PYME.simulation import fluorophores as fluor
 from . import simcontrol
 
 import logging

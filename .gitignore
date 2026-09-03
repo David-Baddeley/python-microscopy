@@ -63,3 +63,5 @@ PYME/experimental/func_octree.c
 *.egg
 *.whl
 *.log
+*.log.*
+PYME/Acquire/webui/dist*

@@ -3,7 +3,7 @@ import numpy as np
 import scipy
 
 from PYME.simulation import wormlike2
-from . import fluor
+from PYME.simulation import fluorophores as fluor
 
 import logging
 logger = logging.getLogger(__name__)

@@ -306,7 +306,7 @@ class ImageGenerator(object):
             Y coordinates of the image pixels (nm)
         z : float
             Z position of the focal plane (nm)
-        fluors : Fluorophores (see PYME.Acquire.Hardware.Simulator.fluor)
+        fluors : Fluorophores (see PYME.simulation.fluorophores)
             Collection of fluorophores to render
         intTime : float
             Integration time (s)

@@ -10,7 +10,6 @@ py_sources = files(
     '__init__.py',
     'fakeCam.py',
     'lasersliders.py',
-    'fluor.py',
     'setup.py',
     'simui_wx.py',
     'EmpiricalHist.py',
@@ -18,23 +17,3 @@ py_sources = files(
 )
 
 py.install_sources(py_sources, subdir:'PYME/Acquire/Hardware/Simulator')
-
-data_files = files(
-    'illuminate.pyx',
-)
-
-install_data(data_files, install_dir: install_dir)
-
-#FIXME - Extension()
-py.extension_module(
-    'illuminate',
-    [
-        'illuminate.pyx',
-    ],
-    include_directories: [np_include_dir],
-    subdir: 'PYME/Acquire/Hardware/Simulator',
-    dependencies: py.dependency(),
-    c_args: ['-O3', '-fno-exceptions', '-ffast-math'],
-    install: true,
-    #cpp_args: ['-std=c++17'],
-)
