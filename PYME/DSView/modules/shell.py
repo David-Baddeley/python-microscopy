@@ -30,7 +30,8 @@ def Plug(dsviewer):
                            startupScript=config.get('dh5View-console-startup-file', None),
               introText='PYMEImage - note that help, license, etc. below is for Python, not PYME\n\n')
 
-    sh.Execute('from pylab import *')
+    sh.Execute('import numpy as np')
+    sh.Execute('import matplotlib.pyplot as plt')
     sh.Execute('from scipy import ndimage')
     sh.Execute('from PYME.DSView import View3D, ViewIm3D')
 
