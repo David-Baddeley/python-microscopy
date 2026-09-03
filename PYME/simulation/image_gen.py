@@ -39,6 +39,43 @@ from PYME.Analysis import MetaData
 from PYME.Deconv.wiener import resizePSF
 from PYME.localization import cInterp
 
+from PYME.recipes.traits import HasTraits, Float, Dict, Bool, List, Tuple, Int, Instance, Enum
+
+class PSFSettings(HasTraits):
+    wavelength_nm = Float(700.)
+    NA = Float(1.47)
+    vectorial = Bool(False)
+    zernike_modes = Dict()
+    zernike_modes_lower = Dict()
+    phases = List([0, .5, 1, 1.5])
+
+    psf_type = Enum('Widefield', '4Pi SMS', 'Confocal', '2D STED')# , '3D STED') #TODO: Add a #D STED model
+
+    pinhole_au = Float(0.7)
+    wavelength_excitation_nm = Float(640.)
+    depletion_I_over_I_sat = Float(1.)
+
+    #four_pi_sms = Bool(False)
+    
+    def default_traits_view(self):
+        # import deferred so this module can run headless.
+        from traitsui.api import View, Item
+        #from PYME.ui.custom_traits_editors import CBEditor
+        
+        return View(Item(name='wavelength_nm'),
+                    Item(name='NA'),
+                    Item(name='vectorial'),
+
+                    Item(name='psf_type', label='PSF Type'),
+                    Item(name='zernike_modes'),
+                    Item(name='zernike_modes_lower', visible_when='psf_type=="4Pi SMS"'),
+                    Item(name='phases', visible_when='psf_type=="4Pi SMS"', label='phases/pi'),
+                    Item(name='pinhole_au', visible_when='psf_type in ["Confocal", "2D STED", "3D STED"]', label='pinhole size (AU)'),
+                    Item(name='wavelength_excitation_nm', visible_when='psf_type in ["Confocal", "2D STED", "3D STED"]', label='excitation wavelength (nm)'),
+                    Item(name='depletion_I_over_I_sat', visible_when='psf_type in ["2D STED", "3D STED"]', label='depletion power (I/I_sat)'),
+                    resizable=True,
+                    buttons=['OK'])
+
 
 class ConstIllumFunction(object):
     '''Uniform illumination, independent of fluorophore position.'''
@@ -205,9 +242,15 @@ class ImageGenerator(object):
         self.mdh['voxelsize.x'] = 1e-3 * pixelsize
         self.mdh['voxelsize.y'] = 1e-3 * pixelsize
 
-    def gen_theoretical_model(self, zernikes={}, **kwargs):
-        from PYME.Analysis.PSFGen import fourierHNA
+    def gen_theoretical_model(self, psf_settings=None, **kwargs):
+        if psf_settings is None:
+            psf_settings = PSFSettings()
 
+        self.set_theoretical_model(psf_settings, **kwargs)
+
+    def set_theoretical_model(self, psf_settings :PSFSettings, **kwargs):
+        from PYME.Analysis.PSFGen import fourierHNA
+        
         vs = self.mdh.voxelsize_nm
         self.IntXVals = vs.x * np.mgrid[-150:150]
         self.IntYVals = vs.y * np.mgrid[-150:150]
@@ -215,32 +258,56 @@ class ImageGenerator(object):
 
         self.dx, self.dy, self.dz = vs
 
-        im = fourierHNA.GenZernikeDPSF(self.IntZVals, zernikes, X=self.IntXVals, Y=self.IntYVals, dx=vs.x, **kwargs)
+        zernikes = {int(k): float(v) for k, v in psf_settings.zernike_modes.items()}
 
-        for i in range(1, len(self.interpModel_by_chan)):
-            self.interpModel_by_chan[i] = None
+        if psf_settings.psf_type == '4Pi SMS':
+            self.IntZVals = 20 * np.mgrid[-60:60]
+            self.dz = 20.
 
-        # normalise to 1 and clip
-        self.interpModel_by_chan[0] = np.maximum(im / im[:, :, int(len(self.IntZVals) / 2)].sum(), 0).astype('f4')
+            z_modes_lower = {int(k): float(v) for k, v in psf_settings.zernike_modes_lower.items()}
+            phases = [np.pi * float(p) for p in psf_settings.phases]
+                        
+            for i, phase in enumerate(phases):
+                        im = fourierHNA.Gen4PiPSF(self.IntZVals, phi=phases, zernikeCoeffs=[zernikes, z_modes_lower], X=self.IntXVals, Y=self.IntYVals, dx=vs.x, **kwargs)
+            
+                        zm = int(len(self.IntZVals) / 2)
+                        # due to interference we can have slices with really low sum
+                        norm = im[:, :, (zm - 10):(zm + 10)].sum(1).sum(0).max()
+                        norm=1
+                        self.interpModel_by_chan[i] = np.maximum(im / norm, 0).astype('f4')
 
-    def gen_theoretical_model_4pi(self, zernikes=[{}, {}], phases=[0, np.pi / 2, np.pi, 3 * np.pi / 2], **kwargs):
-        from PYME.Analysis.PSFGen import fourierHNA
+        else:
+            if psf_settings.psf_type == 'Confocal':
+                im = fourierHNA.GenConfocalPSF(self.IntZVals, zernikes, pinhole_au=psf_settings.pinhole_au, 
+                                           lamb_em=psf_settings.wavelength_nm, 
+                                           lamb_ex=psf_settings.wavelength_excitation_nm, 
+                                           X=self.IntXVals, Y=self.IntYVals, dx=vs.x,**kwargs)
+            if psf_settings.psf_type == '2D STED':
+                im = fourierHNA.Gen2DSTEPSF(self.IntZVals, zernikeCoeffs=zernikes, depletion_power=psf_settings.depletion_I_over_I_sat, 
+                                           pinhole_au=psf_settings.pinhole_au, 
+                                           lamb_em=psf_settings.wavelength_nm, 
+                                           lamb_ex=psf_settings.wavelength_excitation_nm, 
+                                           X=self.IntXVals, Y=self.IntYVals, dx=vs.x,**kwargs)
+            
+            else: # default to widefield
+                im = fourierHNA.GenZernikeDPSF(self.IntZVals, zernikes, X=self.IntXVals, Y=self.IntYVals, dx=vs.x, **kwargs)
 
-        vs = self.mdh.voxelsize_nm
-        self.IntXVals = vs.x * np.mgrid[-150:150]
-        self.IntYVals = vs.y * np.mgrid[-150:150]
-        self.IntZVals = 20 * np.mgrid[-60:60]
+                
+            for i in range(1, len(self.interpModel_by_chan)):
+                self.interpModel_by_chan[i] = None
+    
+            # normalise to 1 and clip
+            #self.interpModel_by_chan[0] = np.maximum(im / im[:, :, int(len(self.IntZVals) / 2)].sum(), 0).astype('f4')
+            self.interpModel_by_chan[0] = np.maximum(im, 0).astype('f4')
 
-        self.dx, self.dy = vs.x, vs.y
-        self.dz = 20.
+        label = f'PSF: {psf_settings.psf_type}, NA={psf_settings.NA}, λ_em={psf_settings.wavelength_nm}nm, zernikes={psf_settings.zernike_modes}'
+        if psf_settings.psf_type in ['Confocal', '2D STED']:
+            label += f', λ_ex={psf_settings.wavelength_excitation_nm}nm, pinhole={psf_settings.pinhole_au}AU'
+        if psf_settings.psf_type == '2D STED':
+            label += f', depletion_power={psf_settings.depletion_I_over_I_sat}'
 
-        for i, phase in enumerate(phases):
-            im = fourierHNA.Gen4PiPSF(self.IntZVals, phi=phase, zernikeCoeffs=zernikes, X=self.IntXVals, Y=self.IntYVals, dx=vs.x, **kwargs)
+        return label
 
-            zm = int(len(self.IntZVals) / 2)
-            # due to interference we can have slices with really low sum
-            norm = im[:, :, (zm - 10):(zm + 10)].sum(1).sum(0).max()
-            self.interpModel_by_chan[i] = np.maximum(im / norm, 0).astype('f4')
 
     def get_psf_image_stack(self):
         from PYME.IO.image import ImageStack
