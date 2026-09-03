@@ -11,31 +11,31 @@ logger = logging.getLogger(__name__)
 from PYME.recipes.traits import HasTraits, Float, Dict, Bool, List, Tuple, Int, Instance
 from PYME.simulation import pointsets
 # re-exported for backwards compatibility with existing init scripts
-from PYME.simulation.pointsets import Group, AssignChannel, Shift, RandomShift, RandomDistribution
+#from PYME.simulation.pointsets import Group, AssignChannel, Shift, RandomShift, RandomDistribution
+from PYME.simulation.image_gen import PSFSettings #, ImageGenerator, ConstIllumFunction, PSFIllumFunction, ROIIllumFunction, PatternIllumFunction, SIMIllumFunction
 
-
-class PSFSettings(HasTraits):
-    wavelength_nm = Float(700.)
-    NA = Float(1.47)
-    vectorial = Bool(False)
-    zernike_modes = Dict()
-    zernike_modes_lower = Dict()
-    phases = List([0, .5, 1, 1.5])
-    four_pi_sms = Bool(False)
+# class PSFSettings(HasTraits):
+#     wavelength_nm = Float(700.)
+#     NA = Float(1.47)
+#     vectorial = Bool(False)
+#     zernike_modes = Dict()
+#     zernike_modes_lower = Dict()
+#     phases = List([0, .5, 1, 1.5])
+#     four_pi_sms = Bool(False)
     
-    def default_traits_view(self):
-        from traitsui.api import View, Item
-        #from PYME.ui.custom_traits_editors import CBEditor
+#     def default_traits_view(self):
+#         from traitsui.api import View, Item
+#         #from PYME.ui.custom_traits_editors import CBEditor
         
-        return View(Item(name='wavelength_nm'),
-                    Item(name='NA'),
-                    Item(name='vectorial'),
-                    Item(name='four_pi_sms', label='4Pi SMS'),
-                    Item(name='zernike_modes'),
-                    Item(name='zernike_modes_lower', visible_when='four_pi_sms==True'),
-                    Item(name='phases', visible_when='four_pi_sms==True', label='phases/pi'),
-                    resizable=True,
-                    buttons=['OK'])
+#         return View(Item(name='wavelength_nm'),
+#                     Item(name='NA'),
+#                     Item(name='vectorial'),
+#                     Item(name='four_pi_sms', label='4Pi SMS'),
+#                     Item(name='zernike_modes'),
+#                     Item(name='zernike_modes_lower', visible_when='four_pi_sms==True'),
+#                     Item(name='phases', visible_when='four_pi_sms==True', label='phases/pi'),
+#                     resizable=True,
+#                     buttons=['OK'])
 
 
 class SimController(object):
@@ -160,29 +160,7 @@ class SimController(object):
         np.save(filename, scipy.array(self.points))
     
     def set_psf_model(self, psf_settings):
-        z_modes = {int(k): float(v) for k, v in psf_settings.zernike_modes.items()}
-        
-        if psf_settings.four_pi_sms:
-            z_modes_lower = {int(k): float(v) for k, v in psf_settings.zernike_modes_lower.items()}
-            phases = [np.pi * float(p) for p in psf_settings.phases]
-            
-            #print z_modes, z_modes_lower, phases
-            self.image_generator.gen_theoretical_model_4pi(phases=phases, zernikes=[z_modes, z_modes_lower],
-                                           lamb=psf_settings.wavelength_nm,
-                                           NA=psf_settings.NA, vectorial=psf_settings.vectorial)
-            
-            label = 'PSF: 4Pi %s [%1.2f NA @ %d nm, zerns=%s]' % ('vectorial' if psf_settings.vectorial else 'scalar',
-                                                                  psf_settings.NA, psf_settings.wavelength_nm, z_modes)
-        else:
-            logger.info('Setting PSF with zernike modes: %s' % z_modes)
-            self.image_generator.gen_theoretical_model(zernikes=z_modes, lamb=psf_settings.wavelength_nm,
-                                        NA=psf_settings.NA, vectorial=psf_settings.vectorial)
-            
-            label = 'PSF: Widefield %s [%1.2f NA @ %d nm, zerns=%s]' % (
-            'vectorial' if psf_settings.vectorial else 'scalar',
-            psf_settings.NA, psf_settings.wavelength_nm, z_modes)
-        
-        return label
+        return self.image_generator.set_theoretical_model(psf_settings)
     
     def set_psf_from_file(self, filename):
         self.image_generator.set_model(filename)

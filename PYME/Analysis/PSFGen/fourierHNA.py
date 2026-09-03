@@ -625,7 +625,11 @@ def _psf_from_e_field(ef):
 
 def PSF_from_pupil_and_propagator(*args, **kwargs):
     e_f = E_field_from_pupil_and_propagator(*args, **kwargs)
-    return _psf_from_e_field(e_f)
+    p = _psf_from_e_field(e_f)
+
+    p = p/p[:,:,p.shape[2]//2].sum()
+
+    return p
 
 def PsfFromPupil(pupil, zs, dx, **kwargs):
     dx = float(dx)
@@ -796,7 +800,122 @@ def Gen4PiPSF(zs,phi=0, zernikeCoeffs=[{},{}], **kwargs):
         ey = oy + sy
 
         return p[ox:ex, oy:ey, :]
+
+def _gen_pinhole_kernel(pinhole_au, lamb_em, NA, dx):
+    """
+    Generate a flat disc kernel for convolution to model a confocal pinhole.
     
+    Parameters
+    ----------
+    pinhole_au : float
+        Pinhole size in Airy units.
+    lamb_em : float
+        Emission wavelength in nm.
+    NA : float
+        Numerical aperture of the objective.
+    dx : float
+        Pixel size in the image plane in nm. 
+    """
+    airy_radius = 1.22 * lamb_em / (2 * NA)  # Airy disk radius in nm
+    pinhole_radius = pinhole_au * airy_radius / dx  # Pinhole radius in pixels
+
+    # create a flat disc kernel for convolution
+    y, x = np.ogrid[-pinhole_radius:pinhole_radius + 1, -pinhole_radius:pinhole_radius + 1]
+    disc_kernel = (x**2 + y**2 <= pinhole_radius**2).astype(float)
+    #disc_kernel /= disc_kernel.sum()  # normalize
+
+    return disc_kernel 
+
+def _convolve_with_pinhole(psf_em, pinhole_au, lamb_em, NA, dx):
+    from scipy import ndimage
+    # convolve the emission PSF with the disc kernel
+    if pinhole_au > 0:
+        disc_kernel = _gen_pinhole_kernel(pinhole_au, lamb_em, NA, dx)
+        return np.array([ndimage.convolve(psf_em[:, :, i], disc_kernel, mode='constant') for i in range(psf_em.shape[2])]).transpose(1, 2, 0)
+    else:
+        return psf_em
+
+
+def GenConfocalPSF(zs, zernikeCoeffs={}, pinhole_au=0.7, **kwargs):
+    """"
+    Calls GenZernikeDPSF twice with excitation and emmision wavelengths
+    to generate a confocal PSF, scaling the zernike coefficients of the 
+    excitation by the ratio of the excitation and emmision wavelengths.
+
+    models a confocal pinhole by convolving the emission PSF with a flat
+    disc of radius equal to the pinhole size in the image plane. The pinhole 
+    size is specified in Airy units.
+    """
+    
+    from PYME.misc import zernike
+    from scipy import ndimage
+
+    # excitation wavelength
+    lamb_ex = kwargs.get('lamb_ex', 488)
+    # emission wavelength
+    lamb_em = kwargs.get('lamb_em', 700)
+
+    # scale the zernike coefficients of the excitation by the ratio of the excitation and emmision wavelengths
+    zernikeCoeffs_ex = {i: c * (lamb_ex / lamb_em) for i, c in zernikeCoeffs.items()}
+
+    # generate the excitation PSF
+    psf_ex = GenZernikeDPSF(zs, zernikeCoeffs=zernikeCoeffs_ex, lamb=lamb_ex, **kwargs)
+
+    # generate the emission PSF
+    psf_em = GenZernikeDPSF(zs, zernikeCoeffs=zernikeCoeffs, lamb=lamb_em, **kwargs)
+
+    psf_em = _convolve_with_pinhole(psf_em, pinhole_au, lamb_em, kwargs.get('NA', 1.47), kwargs.get('dx', 5))
+
+    # multiply the excitation and convolved emission PSFs to get the confocal PSF
+    confocal_psf = psf_ex * psf_em
+
+    print(f'Confocal PSF min: {confocal_psf.min()}, max: {confocal_psf.max()}')
+
+    return confocal_psf
+
+def Gen2DSTEPSF(zs, zernikeCoeffs={}, depletion_power=10.,  pinhole_au=2.0, **kwargs):
+    """
+    Calls GenZernikeDPSF for excitation and detection, GenZernikeDonutPSF for the depletion
+    with excitation and depletion wavelengths. to generate a 2D-STED PSF, scaling the zernike coefficients of the 
+    excitation by the ratio of the excitation and emmision wavelengths.
+
+    depletion power is expressed as a multiple of Isat.
+    """
+    
+    from PYME.misc import zernike
+
+    # excitation wavelength
+    lamb_ex = kwargs.get('lamb_ex', 488)
+    # emission wavelength
+    lamb_em = kwargs.get('lamb_em', 700)
+    lamb_dep = kwargs.get('lamb_dep', 592)
+
+    # scale the zernike coefficients of the excitation by the ratio of the excitation and emmision wavelengths
+    zernikeCoeffs_ex = {i: c * (lamb_ex / lamb_em) for i, c in zernikeCoeffs.items()}
+    zernikeCoeffs_depletion = {i: c * (lamb_ex / lamb_dep) for i, c in zernikeCoeffs.items()}
+
+    # generate the excitation PSF
+    psf_ex = GenZernikeDPSF(zs, zernikeCoeffs=zernikeCoeffs_ex, lamb=lamb_ex, **kwargs)
+
+    # generate the emission PSF
+    psf_em = GenZernikeDPSF(zs, zernikeCoeffs=zernikeCoeffs, lamb=lamb_em, **kwargs)
+
+    psf_em = _convolve_with_pinhole(psf_em, pinhole_au, lamb_em, kwargs.get('NA', 1.47), kwargs.get('dx', 5))
+
+    # generate the depletion PSF
+    psf_depletion = GenZernikeDonutPSF(zs, zernikeCoeffs=zernikeCoeffs, lamb=lamb_dep, **kwargs)
+    psf_depletion = psf_depletion / psf_depletion.max()  # normalize depletion PSF
+    print(f'Depletion PSF min: {psf_depletion.min()}, max: {psf_depletion.max()}')
+
+    # multiply the excitation and emission PSFs to get the 2D-STED PSF
+
+    depletion = np.exp(-depletion_power * psf_depletion)  # apply depletion effect
+    print(f'Depletion factor min: {depletion.min()}, max: {depletion.max()}')
+    sted_psf = psf_ex * depletion * psf_em
+
+    print(f'STED PSF min: {sted_psf.min()}, max: {sted_psf.max()}')
+
+    return sted_psf
 
 def GenClippedWidefieldPSF(zs, field_x=0, field_y=0, apertureNA=1.5,
                            apertureZGradient = 0, **kwargs):
