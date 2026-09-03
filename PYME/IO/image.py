@@ -948,9 +948,9 @@ class ImageStack(object):
                 
                 with unifiedIO.openFile(filename) as df:
                     s = df.read(8)
-                    Z, X, Y, T = numpy.fromstring(s, '>u2')
+                    Z, X, Y, T = numpy.frombuffer(s, '>u2')
                     s = df.read(16)
-                    depth, width, height, elapsed = numpy.fromstring(s, '<f4')
+                    depth, width, height, elapsed = numpy.frombuffer(s, '<f4')
                     s = df.read(1)
                     if ord(s) == 1:
                         self.mdh['DataType'] = '<f4'
