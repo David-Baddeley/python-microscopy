@@ -28,7 +28,7 @@ Test a fit - in general use FitTestJigWC instead
 
 
 import numpy
-from PYME.Acquire.Hardware.Simulator.fakeCam import NoiseMaker
+from PYME.simulation.cameranoise import NoiseMaker
 #import numpy as np
 
 splitterFitModules = ['SplitterFitFR','SplitterFitQR','SplitterFitCOIR', 'BiplaneFitR', 'SplitterShiftEstFR', 'SplitterObjFindR', 'SplitterFitPsfIR']
@@ -36,7 +36,7 @@ splitterFitModules = ['SplitterFitFR','SplitterFitQR','SplitterFitCOIR', 'Biplan
 #from pylab import *
 import copy
 from PYME.IO import MetaDataHandler
-from PYME.Acquire.Hardware import EMCCDTheory
+from PYME.misc import EMCCDTheory
 from scipy import optimize
 import numpy as np
 

@@ -50,7 +50,6 @@ py_sources = files(
     'fakeShutters.py',
     'spacenav.py',
     'LaserControlFrame.py',
-    'EMCCDTheory.py',
     'FocCorrR.py',
     'ioslave.py',
     'FrFilter.py',

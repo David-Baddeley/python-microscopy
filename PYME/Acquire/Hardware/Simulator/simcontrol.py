@@ -4,7 +4,6 @@ import scipy
 
 from PYME.simulation import wormlike2
 from . import fluor
-from . import rend_im
 
 import logging
 logger = logging.getLogger(__name__)
@@ -103,9 +102,14 @@ class SimController(object):
         self.point_gen = point_gen
 
         if image_generator is not None:
+            # this lets us point to a specifc caneras image generator (potentially useful for a multi-camera
+            # setup.
             self.image_generator = image_generator
+        elif scope is not None:
+            self.image_generator = scope.cam.image_generator
         else:
-            self.image_generator = rend_im
+            from PYME.simulation import image_gen
+            self.image_generator = image_gen.ImageGenerator()
 
     @property
     def splitter_info(self):
@@ -163,7 +167,7 @@ class SimController(object):
             phases = [np.pi * float(p) for p in psf_settings.phases]
             
             #print z_modes, z_modes_lower, phases
-            self.image_generator.genTheoreticalModel4Pi(self.image_generator.mdh, phases=phases, zernikes=[z_modes, z_modes_lower],
+            self.image_generator.gen_theoretical_model_4pi(phases=phases, zernikes=[z_modes, z_modes_lower],
                                            lamb=psf_settings.wavelength_nm,
                                            NA=psf_settings.NA, vectorial=psf_settings.vectorial)
             
@@ -171,7 +175,7 @@ class SimController(object):
                                                                   psf_settings.NA, psf_settings.wavelength_nm, z_modes)
         else:
             logger.info('Setting PSF with zernike modes: %s' % z_modes)
-            self.image_generator.genTheoreticalModel(self.image_generator.mdh, zernikes=z_modes, lamb=psf_settings.wavelength_nm,
+            self.image_generator.gen_theoretical_model(zernikes=z_modes, lamb=psf_settings.wavelength_nm,
                                         NA=psf_settings.NA, vectorial=psf_settings.vectorial)
             
             label = 'PSF: Widefield %s [%1.2f NA @ %d nm, zerns=%s]' % (
@@ -181,11 +185,11 @@ class SimController(object):
         return label
     
     def set_psf_from_file(self, filename):
-        self.image_generator.setModel(filename, self.image_generator.mdh)
+        self.image_generator.set_model(filename)
         return 'PSF: Experimental [%s]' % filename
     
     def get_psf(self):
-        return self.image_generator.get_psf()
+        return self.image_generator.get_psf_image_stack()
     
     def save_psf(self, filename):
         self.get_psf().Save(filename)

@@ -68,6 +68,7 @@ py_sources = files(
     'simulation/wormlike_curled.py',
     'simulation/locify.py',
     'simulation/image_gen.py',
+    'simulation/cameranoise.py',
 )
 
 py.install_sources(py_sources, subdir:'PYME/simulation')
@@ -83,6 +84,7 @@ py_sources = files(
     'misc/eventSpy.py',
     'misc/sqlite_ns.py',
     'misc/zernike.py',
+    'misc/EMCCDTheory.py',
     'misc/sqlitendarray.py',
     'misc/snells.py',
     'misc/depGraph.py',

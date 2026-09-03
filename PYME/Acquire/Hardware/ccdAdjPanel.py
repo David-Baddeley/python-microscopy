@@ -25,7 +25,7 @@ from PYME.contrib import wxPlotPanel
 import wx
 import numpy as np
 import matplotlib
-from PYME.Acquire.Hardware import EMCCDTheory
+from PYME.misc import EMCCDTheory
 from PYME.Acquire.Hardware import ccdCalibrator
 import scipy.special
 

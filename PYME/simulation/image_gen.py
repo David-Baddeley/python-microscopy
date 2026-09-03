@@ -205,7 +205,7 @@ class ImageGenerator(object):
         self.mdh['voxelsize.x'] = 1e-3 * pixelsize
         self.mdh['voxelsize.y'] = 1e-3 * pixelsize
 
-    def genTheoreticalModel(self, zernikes={}, **kwargs):
+    def gen_theoretical_model(self, zernikes={}, **kwargs):
         from PYME.Analysis.PSFGen import fourierHNA
 
         vs = self.mdh.voxelsize_nm
@@ -223,7 +223,7 @@ class ImageGenerator(object):
         # normalise to 1 and clip
         self.interpModel_by_chan[0] = np.maximum(im / im[:, :, int(len(self.IntZVals) / 2)].sum(), 0).astype('f4')
 
-    def genTheoreticalModel4Pi(self, zernikes=[{}, {}], phases=[0, np.pi / 2, np.pi, 3 * np.pi / 2], **kwargs):
+    def gen_theoretical_model_4pi(self, zernikes=[{}, {}], phases=[0, np.pi / 2, np.pi, 3 * np.pi / 2], **kwargs):
         from PYME.Analysis.PSFGen import fourierHNA
 
         vs = self.mdh.voxelsize_nm
@@ -254,7 +254,7 @@ class ImageGenerator(object):
 
         return ImageStack(data=[c for c in self.interpModel_by_chan if c is not None], mdh=mdh, titleStub='Simulated PSF')
 
-    def setModel(self, modName):
+    def set_model(self, modName):
         from PYME.IO import load_psf
 
         mod, vs_nm = load_psf.load_psf(modName)
@@ -284,10 +284,59 @@ class ImageGenerator(object):
                 cInterp.InterpolateInplaceM(self.get_psf_model(chan)[0], im, (fl['x'] - x0 + x_offset).astype('f4'), (fl['y'] - y0).astype('f4'),
                                              z_.astype('f4'), (A * fl['spec'][:, spec_chan]).astype('f4'), roiSize, dx, dy, dz)
 
-    def simPalmImFI(self, X, Y, z, fluors, intTime=.1, numSubSteps=10, laserPowers=[.1, 1], position=[0, 0, 0],
-                     illuminationFunction='ConstIllum', ChanXOffsets=[0, ], ChanZOffsets=[0, ], ChanSpecs=None, im=None):
+    def simulate_image(self, X, Y, fluors, intTime=.1, numSubSteps=10, laserPowers=[.1, 1], position=[0, 0, 0],
+                        illuminationFunction='ConstIllum', ChanXOffsets=[0, ], ChanZOffsets=[0, ], ChanSpecs=None, im=None):
+        """
+        Simulate a camera image from a collection of blinking fluorophores. There are 2 key steps:
+        
+        1) Illuminate the fluorophores. This does 2 things: determines what state a fluorophore is in 
+        normally one of (caged, on, blinked, or bleached bleached) by doing a monte-carlo update based 
+        on laser powers and the fluorophore's transition matrix. Fluorophores that are in the on state
+        then derive an intensity based on the illumination function and the laser powers. The result is 
+        an array of fluorecent intensities for each fluorophore in this frame.
+
+        2) Render the fluorphores into the image. This is done by interpolating the PSF model at the 
+        fluorophore's position and adding it to the image, scaled by the fluorophore's intensity.
+
+        Parameters
+        ----------
+        X : array-like
+            X coordinates of the image pixels (nm)
+        Y : array-like
+            Y coordinates of the image pixels (nm)
+        z : float
+            Z position of the focal plane (nm)
+        fluors : Fluorophores (see PYME.Acquire.Hardware.Simulator.fluor)
+            Collection of fluorophores to render
+        intTime : float
+            Integration time (s)
+        numSubSteps : int
+            Number of sub-steps to use for rendering (to account for fluorophore switching dynamics within a frame)
+        laserPowers : list of float
+            Laser powers for each channel (arbitrary units)
+        position : list of float
+            Position of the camera field of view in the sample (nm). This is used to simulate stage motion
+            in a real microscope. Currently only passed to the illumination function. 
+            (points are transformed in the calling code).
+        illuminationFunction : str or callable
+            Either a string key for a registered illumination function, or a callable that takes (fluors, position) and returns an array of illumination fractions for each fluorophore.
+        ChanXOffsets : list of float
+            X offsets for each channel (nm)
+        ChanZOffsets : list of float
+            Z offsets for each channel (nm)
+        ChanSpecs : list of int
+            Channel specification for each fluorophore (if None, all fluorophores are assumed to belong to the first channel)
+        im : array-like, optional
+            Pre-allocated image array to render into. If None, a new array will be created
+
+        """
         if self.get_psf_model()[0] is None:
-            self.genTheoreticalModel()
+            self.gen_theoretical_model()
+
+        xp, yp, z = position
+        X = X + xp
+        Y = Y + yp
+
 
         if im is None:
             im = np.zeros((len(X), len(Y)), 'f')

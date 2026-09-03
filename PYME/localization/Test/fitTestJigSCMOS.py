@@ -21,14 +21,14 @@
 #
 ##################
 
-from PYME.Acquire.Hardware.Simulator.fakeCam import NoiseMaker
+from PYME.simulation.cameranoise import NoiseMaker
 
 splitterFitModules = ['SplitterFitFR','SplitterFitQR','SplitterFitCOIR', 'BiplaneFitR', 'SplitterShiftEstFR', 'SplitterObjFindR', 'SplitterFitPsfIR']
 
 
 import copy
 from PYME.IO import MetaDataHandler
-from PYME.Acquire.Hardware import EMCCDTheory
+from PYME.misc import EMCCDTheory
 from scipy import optimize
 import numpy as np
 from PYME.localization import remFitBuf
