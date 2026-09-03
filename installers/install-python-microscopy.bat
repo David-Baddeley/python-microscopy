@@ -29,8 +29,13 @@ echo Creating standalone Python installation...
 if errorlevel 1 (echo ERROR: py-app-standalone failed & exit /b 1)
 
 :: ---- Normalize cpython-* to a stable directory name ----
-for /d %%d in ("!DEST!\cpython-*") do move "%%d" "!DEST!\python" >nul
+:: pushd+ren avoids the CMD quirk where a quoted glob isn't expanded in for /d.
+pushd "!DEST!"
+for /d %%d in (cpython-*) do ren "%%d" python
+popd
 if not exist "!DEST!\python\" (echo ERROR: standalone Python directory not found & exit /b 1)
+:: Remove the bare-venv temp directory that py-app-standalone leaves behind.
+if exist "!DEST!\bare-venv\" rd /s /q "!DEST!\bare-venv"
 
 :: ---- Entry point .cmd wrappers ----
 for %%e in (%ENTRY_POINTS%) do call :mk_wrapper "%%e"

@@ -51,6 +51,8 @@ uv tool run py-app-standalone --python-version "$TARGET_PYTHON" --target "$DEST"
 PYTHON_DIRS=( "$DEST"/cpython-* )
 [[ -d "${PYTHON_DIRS[0]}" ]] || { echo "ERROR: standalone Python directory not found" >&2; exit 1; }
 mv "${PYTHON_DIRS[0]}" "$DEST/python"
+# Remove the bare-venv temp directory that py-app-standalone leaves behind.
+rm -rf "$DEST/bare-venv"
 
 # --- Top-level entry point symlinks ---
 for ep in "${ENTRY_POINTS[@]}"; do
