@@ -43,23 +43,23 @@ from PYME.Deconv.wiener import resizePSF
 #import threading
 #tLock = threading.Lock()
 
-def renderIm(X, Y, z, points, roiSize, A):
-    #X = mgrid[xImSlice]
-    #Y = mgrid[yImSlice]
-    im = np.zeros((len(X), len(Y)), 'f')
+# def renderIm(X, Y, z, points, roiSize, A):
+#     #X = mgrid[xImSlice]
+#     #Y = mgrid[yImSlice]
+#     im = np.zeros((len(X), len(Y)), 'f')
 
-    P = np.arange(0,1.01,.1)
+#     P = np.arange(0,1.01,.1)
 
-    for (x0,y0,z0) in points:
-        ix = abs(X - x0).argmin()
-        iy = abs(Y - y0).argmin()
+#     for (x0,y0,z0) in points:
+#         ix = abs(X - x0).argmin()
+#         iy = abs(Y - y0).argmin()
 
-        imp =genWidefieldPSF(X[(ix - roiSize):(ix + roiSize + 1)], Y[(iy - roiSize):(iy + roiSize + 1)], z, P,A*1e3, x0,y0,z0,depthInSample=0)
-        #print imp.shape
-        im[(ix - roiSize):(ix + roiSize + 1), (iy - roiSize):(iy + roiSize + 1)] += imp[:,:,0]
+#         imp =genWidefieldPSF(X[(ix - roiSize):(ix + roiSize + 1)], Y[(iy - roiSize):(iy + roiSize + 1)], z, P,A*1e3, x0,y0,z0,depthInSample=0)
+#         #print imp.shape
+#         im[(ix - roiSize):(ix + roiSize + 1), (iy - roiSize):(iy + roiSize + 1)] += imp[:,:,0]
     
-    #print im.shape
-    return im
+#     #print im.shape
+#     return im
 
 
 
@@ -104,7 +104,7 @@ def genTheoreticalModel(md, zernikes={}, **kwargs):
 
         dx, dy, dz = vs
 
-        P = np.arange(0,1.01,.01)
+        #P = np.arange(0,1.01,.01)
 
         #interpModel = genWidefieldPSF(IntXVals, IntYVals, IntZVals, P ,1e3, 0, 0, 0, 2*pi/525, 1.47, 10e3).astype('f')
         im = fourierHNA.GenZernikeDPSF(IntZVals, zernikes, X=IntXVals, Y=IntYVals, dx=vs.x, **kwargs)
@@ -172,133 +172,133 @@ def setModel(modName, md):
     #interpModel = np.maximum(mod/mod.max(), 0) #normalise to 1
     interpModel_by_chan[0] = np.maximum(mod/mod[:,:,len(IntZVals)/2].sum(), 0).astype('f4') #normalise to 1 and clip
 
-def interp(X, Y, Z):
-    X = np.atleast_1d(X)
-    Y = np.atleast_1d(Y)
-    Z = np.atleast_1d(Z)
+# def interp(X, Y, Z):
+#     X = np.atleast_1d(X)
+#     Y = np.atleast_1d(Y)
+#     Z = np.atleast_1d(Z)
 
-    ox = X[0]
-    oy = Y[0]
-    oz = Z[0]
+#     ox = X[0]
+#     oy = Y[0]
+#     oz = Z[0]
 
-    rx = (ox % dx)/dx
-    ry = (oy % dy)/dy
-    rz = (oz % dz)/dz
+#     rx = (ox % dx)/dx
+#     ry = (oy % dy)/dy
+#     rz = (oz % dz)/dz
 
-    fx = int(len(IntXVals)/2) + int(ox/dx)
-    fy = int(len(IntYVals)/2) + int(oy/dy)
-    fz = int(len(IntZVals)/2) + int(oz/dz)
+#     fx = int(len(IntXVals)/2) + int(ox/dx)
+#     fy = int(len(IntYVals)/2) + int(oy/dy)
+#     fz = int(len(IntZVals)/2) + int(oz/dz)
 
-    #print fx
-    #print rx, ry, rz
+#     #print fx
+#     #print rx, ry, rz
 
-    xl = len(X)
-    yl = len(Y)
-    zl = len(Z)
+#     xl = len(X)
+#     yl = len(Y)
+#     zl = len(Z)
 
-    #print xl
-    im = interpModel()
+#     #print xl
+#     im = interpModel()
 
-    m000 = im[fx:(fx+xl),fy:(fy+yl),fz:(fz+zl)]
-    m100 = im[(fx+1):(fx+xl+1),fy:(fy+yl),fz:(fz+zl)]
-    m010 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),fz:(fz+zl)]
-    m110 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),fz:(fz+zl)]
+#     m000 = im[fx:(fx+xl),fy:(fy+yl),fz:(fz+zl)]
+#     m100 = im[(fx+1):(fx+xl+1),fy:(fy+yl),fz:(fz+zl)]
+#     m010 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),fz:(fz+zl)]
+#     m110 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),fz:(fz+zl)]
 
-    m001 = im[fx:(fx+xl),fy:(fy+yl),(fz+1):(fz+zl+1)]
-    m101 = im[(fx+1):(fx+xl+1),fy:(fy+yl),(fz+1):(fz+zl+1)]
-    m011 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),(fz+1):(fz+zl+1)]
-    m111 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),(fz+1):(fz+zl+1)]
+#     m001 = im[fx:(fx+xl),fy:(fy+yl),(fz+1):(fz+zl+1)]
+#     m101 = im[(fx+1):(fx+xl+1),fy:(fy+yl),(fz+1):(fz+zl+1)]
+#     m011 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),(fz+1):(fz+zl+1)]
+#     m111 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),(fz+1):(fz+zl+1)]
 
-    #print m000.shape
+#     #print m000.shape
 
-#    m = scipy.sum([((1-rx)*(1-ry)*(1-rz))*m000, ((rx)*(1-ry)*(1-rz))*m100, ((1-rx)*(ry)*(1-rz))*m010, ((rx)*(ry)*(1-rz))*m110,
-#        ((1-rx)*(1-ry)*(rz))*m001, ((rx)*(1-ry)*(rz))*m101, ((1-rx)*(ry)*(rz))*m011, ((rx)*(ry)*(rz))*m111], 0)
+# #    m = scipy.sum([((1-rx)*(1-ry)*(1-rz))*m000, ((rx)*(1-ry)*(1-rz))*m100, ((1-rx)*(ry)*(1-rz))*m010, ((rx)*(ry)*(1-rz))*m110,
+# #        ((1-rx)*(1-ry)*(rz))*m001, ((rx)*(1-ry)*(rz))*m101, ((1-rx)*(ry)*(rz))*m011, ((rx)*(ry)*(rz))*m111], 0)
 
-    m = ((1-rx)*(1-ry)*(1-rz))*m000 + ((rx)*(1-ry)*(1-rz))*m100 + ((1-rx)*(ry)*(1-rz))*m010 + ((rx)*(ry)*(1-rz))*m110+((1-rx)*(1-ry)*(rz))*m001+ ((rx)*(1-ry)*(rz))*m101+ ((1-rx)*(ry)*(rz))*m011+ ((rx)*(ry)*(rz))*m111
-    #print m.shape
-    return m
+#     m = ((1-rx)*(1-ry)*(1-rz))*m000 + ((rx)*(1-ry)*(1-rz))*m100 + ((1-rx)*(ry)*(1-rz))*m010 + ((rx)*(ry)*(1-rz))*m110+((1-rx)*(1-ry)*(rz))*m001+ ((rx)*(1-ry)*(rz))*m101+ ((1-rx)*(ry)*(rz))*m011+ ((rx)*(ry)*(rz))*m111
+#     #print m.shape
+#     return m
 
-def interp2(X, Y, Z):
-    X = atleast_1d(X)
-    Y = atleast_1d(Y)
-    Z = atleast_1d(Z)
+# def interp2(X, Y, Z):
+#     X = atleast_1d(X)
+#     Y = atleast_1d(Y)
+#     Z = atleast_1d(Z)
 
-    ox = X[0]
-    oy = Y[0]
-    oz = Z[0]
+#     ox = X[0]
+#     oy = Y[0]
+#     oz = Z[0]
 
-    rx = (ox % dx)/dx
-    ry = (oy % dy)/dy
-    rz = (oz % dz)/dz
+#     rx = (ox % dx)/dx
+#     ry = (oy % dy)/dy
+#     rz = (oz % dz)/dz
 
-    fx = int(len(IntXVals)/2) + int(ox/dx)
-    fy = int(len(IntYVals)/2) + int(oy/dy)
-    fz = int(len(IntZVals)/2) + int(oz/dz)
+#     fx = int(len(IntXVals)/2) + int(ox/dx)
+#     fy = int(len(IntYVals)/2) + int(oy/dy)
+#     fz = int(len(IntZVals)/2) + int(oz/dz)
 
-    #print fx
-    #print rx, ry, rz
+#     #print fx
+#     #print rx, ry, rz
 
-    xl = len(X)
-    yl = len(Y)
-    zl = len(Z)
+#     xl = len(X)
+#     yl = len(Y)
+#     zl = len(Z)
 
-    #print xl
+#     #print xl
     
-    im = interpModel()
+#     im = interpModel()
 
-    m000 = im[fx:(fx+xl),fy:(fy+yl),fz:(fz+zl)]
-    m100 = im[(fx+1):(fx+xl+1),fy:(fy+yl),fz:(fz+zl)]
-    m010 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),fz:(fz+zl)]
-    m110 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),fz:(fz+zl)]
+#     m000 = im[fx:(fx+xl),fy:(fy+yl),fz:(fz+zl)]
+#     m100 = im[(fx+1):(fx+xl+1),fy:(fy+yl),fz:(fz+zl)]
+#     m010 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),fz:(fz+zl)]
+#     m110 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),fz:(fz+zl)]
 
-    m001 = im[fx:(fx+xl),fy:(fy+yl),(fz+1):(fz+zl+1)]
-    m101 = im[(fx+1):(fx+xl+1),fy:(fy+yl),(fz+1):(fz+zl+1)]
-    m011 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),(fz+1):(fz+zl+1)]
-    m111 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),(fz+1):(fz+zl+1)]
+#     m001 = im[fx:(fx+xl),fy:(fy+yl),(fz+1):(fz+zl+1)]
+#     m101 = im[(fx+1):(fx+xl+1),fy:(fy+yl),(fz+1):(fz+zl+1)]
+#     m011 = im[fx:(fx+xl),(fy + 1):(fy+yl+1),(fz+1):(fz+zl+1)]
+#     m111 = im[(fx+1):(fx+xl+1),(fy+1):(fy+yl+1),(fz+1):(fz+zl+1)]
 
-    #print m000.shape
+#     #print m000.shape
 
-#    m = scipy.sum([((1-rx)*(1-ry)*(1-rz))*m000, ((rx)*(1-ry)*(1-rz))*m100, ((1-rx)*(ry)*(1-rz))*m010, ((rx)*(ry)*(1-rz))*m110,
-#        ((1-rx)*(1-ry)*(rz))*m001, ((rx)*(1-ry)*(rz))*m101, ((1-rx)*(ry)*(rz))*m011, ((rx)*(ry)*(rz))*m111], 0)
+# #    m = scipy.sum([((1-rx)*(1-ry)*(1-rz))*m000, ((rx)*(1-ry)*(1-rz))*m100, ((1-rx)*(ry)*(1-rz))*m010, ((rx)*(ry)*(1-rz))*m110,
+# #        ((1-rx)*(1-ry)*(rz))*m001, ((rx)*(1-ry)*(rz))*m101, ((1-rx)*(ry)*(rz))*m011, ((rx)*(ry)*(rz))*m111], 0)
 
-    m = ((1-rx)*(1-ry)*(1-rz))*m000 + ((rx)*(1-ry)*(1-rz))*m100 + ((1-rx)*(ry)*(1-rz))*m010 + ((rx)*(ry)*(1-rz))*m110+((1-rx)*(1-ry)*(rz))*m001+ ((rx)*(1-ry)*(rz))*m101+ ((1-rx)*(ry)*(rz))*m011+ ((rx)*(ry)*(rz))*m111
+#     m = ((1-rx)*(1-ry)*(1-rz))*m000 + ((rx)*(1-ry)*(1-rz))*m100 + ((1-rx)*(ry)*(1-rz))*m010 + ((rx)*(ry)*(1-rz))*m110+((1-rx)*(1-ry)*(rz))*m001+ ((rx)*(1-ry)*(rz))*m101+ ((1-rx)*(ry)*(rz))*m011+ ((rx)*(ry)*(rz))*m111
 
-    r000 = ((1-rx)*(1-ry)*(1-rz))
-    r100 = ((rx)*(1-ry)*(1-rz))
-    r010 = ((1-rx)*(ry)*(1-rz))
-    r110 = ((rx)*(ry)*(1-rz))
-    r001 = ((1-rx)*(1-ry)*(rz))
-    r101 = ((1-rx)*(ry)*(rz))
-    r011 = ((1-rx)*(ry)*(rz))
-    r111 = ((rx)*(ry)*(rz))
+#     r000 = ((1-rx)*(1-ry)*(1-rz))
+#     r100 = ((rx)*(1-ry)*(1-rz))
+#     r010 = ((1-rx)*(ry)*(1-rz))
+#     r110 = ((rx)*(ry)*(1-rz))
+#     r001 = ((1-rx)*(1-ry)*(rz))
+#     r101 = ((1-rx)*(ry)*(rz))
+#     r011 = ((1-rx)*(ry)*(rz))
+#     r111 = ((rx)*(ry)*(rz))
 
-    m = r000*m000
-    m[:] = m[:] + r100*m100
-    m[:] = m[:] + r010*m010
-    m[:] = m[:] + r110*m110
-    m[:] = m[:] + r001*m001
-    m[:] = m[:] + r101*m101
-    m[:] = m[:] + r011*m011
-    m[:] = m[:] + r111*m111
+#     m = r000*m000
+#     m[:] = m[:] + r100*m100
+#     m[:] = m[:] + r010*m010
+#     m[:] = m[:] + r110*m110
+#     m[:] = m[:] + r001*m001
+#     m[:] = m[:] + r101*m101
+#     m[:] = m[:] + r011*m011
+#     m[:] = m[:] + r111*m111
 
-    m = r000*m000 + r100*m100 + r010*m010 + r110*m110 + r001*m001 + r101*m101 + r011*m011 + r111*m111
-    #print m.shape
-    return m
+#     m = r000*m000 + r100*m100 + r010*m010 + r110*m110 + r001*m001 + r101*m101 + r011*m011 + r111*m111
+#     #print m.shape
+#     return m
 
-def interp3(X, Y, Z):
-    X = np.atleast_1d(X)
-    Y = np.atleast_1d(Y)
-    Z = np.atleast_1d(Z)
+# def interp3(X, Y, Z):
+#     X = np.atleast_1d(X)
+#     Y = np.atleast_1d(Y)
+#     Z = np.atleast_1d(Z)
 
-    ox = X[0]
-    oy = Y[0]
-    oz = Z[0]
+#     ox = X[0]
+#     oy = Y[0]
+#     oz = Z[0]
 
-    xl = len(X)
-    yl = len(Y)
-    zl = len(Z)
+#     xl = len(X)
+#     yl = len(Y)
+#     zl = len(Z)
     
-    return cInterp.Interpolate(interpModel(), ox,oy,oz,xl,yl,dx,dy,dz)[:,:,None]
+#     return cInterp.Interpolate(interpModel(), ox,oy,oz,xl,yl,dx,dy,dz)[:,:,None]
 
 @fluor.registerIllumFcn
 def PSFIllumFunction(fluors, position):
@@ -372,7 +372,7 @@ SIM_theta = 0
 SIM_phi = 0
 
 @fluor.registerIllumFcn
-def SIMIllumFcn(fluors, postion):
+def SIMIllumFcn(fluors, position):
     
     x = fluors['x']#/dx + illPattern.shape[0]/2
     y = fluors['y']#/dy + illPattern.shape[1]/2

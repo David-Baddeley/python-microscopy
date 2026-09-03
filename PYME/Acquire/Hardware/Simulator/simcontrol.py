@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 from PYME.recipes.traits import HasTraits, Float, Dict, Bool, List, Tuple, Int, Instance
 from PYME.simulation import pointsets
+# re-exported for backwards compatibility with existing init scripts
+from PYME.simulation.pointsets import Group, AssignChannel, Shift, RandomShift, RandomDistribution
 
 
 class PSFSettings(HasTraits):
@@ -20,7 +22,7 @@ class PSFSettings(HasTraits):
     zernike_modes = Dict()
     zernike_modes_lower = Dict()
     phases = List([0, .5, 1, 1.5])
-    four_pi = Bool(False)
+    four_pi_sms = Bool(False)
     
     def default_traits_view(self):
         from traitsui.api import View, Item
@@ -29,77 +31,12 @@ class PSFSettings(HasTraits):
         return View(Item(name='wavelength_nm'),
                     Item(name='NA'),
                     Item(name='vectorial'),
-                    Item(name='four_pi', label='4Pi'),
+                    Item(name='four_pi_sms', label='4Pi SMS'),
                     Item(name='zernike_modes'),
-                    Item(name='zernike_modes_lower', visible_when='four_pi==True'),
-                    Item(name='phases', visible_when='four_pi==True', label='phases/pi'),
+                    Item(name='zernike_modes_lower', visible_when='four_pi_sms==True'),
+                    Item(name='phases', visible_when='four_pi_sms==True', label='phases/pi'),
                     resizable=True,
                     buttons=['OK'])
-
-
-class Group(HasTraits):
-    generators = List(Instance(HasTraits))
-
-    def points(self):
-        for g in self.generators:
-            for pts in g.points():
-                yield pts
-
-class AssignChannel(HasTraits):
-    channel = Int(0)
-    generator = Instance(HasTraits)
-
-    def points(self):
-        for pts in self.generator.points():
-            pts[:,3] = self.channel
-            yield pts
-class Shift(HasTraits):
-    dx = Float(0)
-    dy = Float(0)
-
-    generator = Instance(HasTraits)
-
-    def points(self):
-        for pts in self.generator.points():
-            pts[:,0] += self.dx
-            pts[:,1] += self.dy
-            yield pts
-
-class RandomShift(HasTraits):
-    magnitude = Float(1000)
-
-    generator = Instance(HasTraits)
-
-    def points(self):
-        dx, dy = np.random.uniform(-self.magnitude, self.magnitude, 2)
-        for pts in self.generator.points():
-            pts[:,0] += dx
-            pts[:,1] += dy
-            yield pts
-class RandomDistribution(HasTraits):
-    n_instances = Int(1)
-    region_size = Float(5000)
-    generator = Instance(HasTraits)
-    # force one of the points to be at the origin (dirty hack to make sure there is a structure present in the simulator at startup)
-    force_at_origin = Bool(False) 
-
-    def points(self):
-        xp = self.region_size*np.random.uniform(-1, 1, self.n_instances)
-        yp = self.region_size*np.random.uniform(-1, 1, self.n_instances)
-
-        if self.force_at_origin:
-            xp[0] = 0.0
-            yp[0] = 0.0
-
-
-        for xi, yi in zip(xp, yp):
-            for p in self.generator.points():
-                p1 = np.copy(p)
-                p1[:,0] += xi
-                p1[:,1] += yi
-
-                yield p1
-
 
 
 class SimController(object):
@@ -110,7 +47,7 @@ class SimController(object):
                  excitation_crossections=(1., 100.),
                  activeState=fluor.states.active, n_chans=1, splitter_info=([0, -200, 300., 500.], [0, 1, 1, 0]),
                  spectral_signatures=[[1, 0.3], [.7, .7], [0.2, 1]],
-                 point_gen=None):
+                 point_gen=None, image_generator=None):
         """
 
         Parameters
@@ -164,7 +101,12 @@ class SimController(object):
         self._empirical_hist = None
 
         self.point_gen = point_gen
-        
+
+        if image_generator is not None:
+            self.image_generator = image_generator
+        else:
+            self.image_generator = rend_im
+
     @property
     def splitter_info(self):
         return self.z_offsets[:self.n_chans], self.spec_chans[:self.n_chans]
@@ -216,12 +158,12 @@ class SimController(object):
     def set_psf_model(self, psf_settings):
         z_modes = {int(k): float(v) for k, v in psf_settings.zernike_modes.items()}
         
-        if psf_settings.four_pi:
+        if psf_settings.four_pi_sms:
             z_modes_lower = {int(k): float(v) for k, v in psf_settings.zernike_modes_lower.items()}
             phases = [np.pi * float(p) for p in psf_settings.phases]
             
             #print z_modes, z_modes_lower, phases
-            rend_im.genTheoreticalModel4Pi(rend_im.mdh, phases=phases, zernikes=[z_modes, z_modes_lower],
+            self.image_generator.genTheoreticalModel4Pi(self.image_generator.mdh, phases=phases, zernikes=[z_modes, z_modes_lower],
                                            lamb=psf_settings.wavelength_nm,
                                            NA=psf_settings.NA, vectorial=psf_settings.vectorial)
             
@@ -229,7 +171,7 @@ class SimController(object):
                                                                   psf_settings.NA, psf_settings.wavelength_nm, z_modes)
         else:
             logger.info('Setting PSF with zernike modes: %s' % z_modes)
-            rend_im.genTheoreticalModel(rend_im.mdh, zernikes=z_modes, lamb=psf_settings.wavelength_nm,
+            self.image_generator.genTheoreticalModel(self.image_generator.mdh, zernikes=z_modes, lamb=psf_settings.wavelength_nm,
                                         NA=psf_settings.NA, vectorial=psf_settings.vectorial)
             
             label = 'PSF: Widefield %s [%1.2f NA @ %d nm, zerns=%s]' % (
@@ -239,11 +181,11 @@ class SimController(object):
         return label
     
     def set_psf_from_file(self, filename):
-        rend_im.setModel(filename, rend_im.mdh)
+        self.image_generator.setModel(filename, self.image_generator.mdh)
         return 'PSF: Experimental [%s]' % filename
     
     def get_psf(self):
-        return rend_im.get_psf()
+        return self.image_generator.get_psf()
     
     def save_psf(self, filename):
         self.get_psf().Save(filename)

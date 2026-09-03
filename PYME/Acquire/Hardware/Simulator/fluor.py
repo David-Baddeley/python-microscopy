@@ -50,6 +50,12 @@ def registerIllumFcn(fcn):
     illuminationFunctions[fcn.__name__] = fcn
     return fcn
 
+def _resolve_illum_fcn(illuminationFunction):
+    '''allow illuminationFunction to be a registry name or a callable/instance directly'''
+    if isinstance(illuminationFunction, str):
+        return illuminationFunctions[illuminationFunction]
+    return illuminationFunction
+
 @registerIllumFcn
 def ConstIllum(fluors, position):
     return 1.0
@@ -143,7 +149,7 @@ class Fluorophores(object):
         #use faster cythoned version of function if available
         def illuminate(self,laserPowers, expTime, position=[0,0,0], illuminationFunction = 'ConstIllum'):
             dose = (np.concatenate(([1.0],laserPowers),0)*expTime).astype('f')
-            ilFrac = illuminationFunctions[illuminationFunction](self.fl, position)
+            ilFrac = _resolve_illum_fcn(illuminationFunction)(self.fl, position)
             return illuminate.illuminate(self.transitionTensor, self.fl, self.fl['state'], self.fl['abcosthetas'], dose, ilFrac, self.activeState)
     else:
         def illuminate(self, laserPowers, expTime, position=[0,0,0], illuminationFunction = 'ConstIllum'):
@@ -152,7 +158,7 @@ class Fluorophores(object):
             transMat = self.transitionTensor[self.fl['state'],:,:].copy()
             
     
-            ilFrac = illuminationFunctions[illuminationFunction](self.fl, position)
+            ilFrac = _resolve_illum_fcn(illuminationFunction)(self.fl, position)
     
             c0 = self.fl['abcosthetas'][:,0]*dose[1]*ilFrac
             c1 = self.fl['abcosthetas'][:,1]*dose[2]*ilFrac
@@ -327,7 +333,7 @@ class EmpiricalHistFluors(Fluorophores):
         
         self.fl['state'] = active_time > 0
 
-        ilFrac = illuminationFunctions[illuminationFunction](self.fl,position) #*expTime*\laserPowers[1]*90
+        ilFrac = _resolve_illum_fcn(illuminationFunction)(self.fl,position) #*expTime*\laserPowers[1]*90
         
         return np.minimum(active_time, self.expTime)*ilFrac*dose
 

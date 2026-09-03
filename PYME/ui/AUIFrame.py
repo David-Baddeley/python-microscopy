@@ -75,6 +75,10 @@ class AUIFrame(wx.Frame):
                     self._mgr.Update()
                     logger.debug(f'Current page: {currPage}, pane0: {self.pane0}, notebook_id: {pn.notebook_id}')
                     wx.CallAfter(nbs[pn.notebook_id].SetSelection, currPage)
+                else:
+                    self._mgr.Update()
+                    if len(nbs) > pn.notebook_id:
+                        wx.CallAfter(nbs[pn.notebook_id].SetSelection, nbs[pn.notebook_id].GetPageCount()-1)
             else:
                 self._mgr.AddPane(page, aui.AuiPaneInfo().
                               Name(caption.replace(' ', '')).Caption(caption).CloseButton(False).CaptionVisible(False), target=pn)

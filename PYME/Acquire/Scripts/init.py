@@ -98,6 +98,9 @@ def sim_controls(MainFrame, scope):
     scope.simcontrol = simcontrol.SimController(scope)
     dsc = simui_wx.dSimControl(MainFrame, scope.simcontrol)
     MainFrame.AddPage(page=dsc, select=False, caption='Simulation Settings')
+
+    msc = simui_wx.MiniSimPanel(MainFrame, scope.simcontrol)
+    MainFrame.camPanels.append((msc, 'Simulation'))
     
     scope.dsc = dsc
 
@@ -182,7 +185,7 @@ def action_manager(MainFrame, scope):
     from PYME.Acquire.ui import actionUI
     
     ap = actionUI.ActionPanel(MainFrame, scope.actions, scope)
-    MainFrame.AddPage(ap, caption='Queued Actions')
+    MainFrame.AddPage(ap, select=False, caption='Queued Actions')
 
 @init_hardware('Tiling')
 def tiling(scope):

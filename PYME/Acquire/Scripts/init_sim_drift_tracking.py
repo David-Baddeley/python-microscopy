@@ -103,10 +103,10 @@ def sim_controls(MainFrame, scope):
     MainFrame.camPanels.append((msc, 'Simulation'))
 
     from PYME.simulation import pointsets
-    scope.simcontrol.point_gen = simcontrol.Shift(dx=5000, dy=5000, generator=pointsets.RandomSource(numPoints=20))
-    #scope.simcontrol.point_gen = simcontrol.RandomDistribution(n_instances=25,region_size=70e3, 
-    #                                                            generator=simcontrol.Group(generators=[pointsets.WiglyFibreSource(),
-                                                                    #simcontrol.AssignChannel(channel=1, generator=pointsets.SHNucleusSource())
+    scope.simcontrol.point_gen = pointsets.Shift(dx=5000, dy=5000, generator=pointsets.RandomSource(numPoints=20))
+    #scope.simcontrol.point_gen = pointsets.RandomDistribution(n_instances=25,region_size=70e3, 
+    #                                                            generator=pointsets.Group(generators=[pointsets.WiglyFibreSource(),
+                                                                    #pointsets.AssignChannel(channel=1, generator=pointsets.SHNucleusSource())
     #                                                                ]))
     scope.simcontrol.generate_fluorophores()
     

@@ -21,7 +21,9 @@
 #
 ##################
 
-from . import rend_im
+#from . import rend_im
+from PYME.Acquire.Hardware.Simulator import rend_im
+from PYME.simulation import image_gen
 import scipy
 
 from PYME.IO import MetaDataHandler
@@ -168,7 +170,7 @@ WELL_DEPTH= (2 << 15) -1
 #calculate image in a separate thread to maintain GUI reponsiveness
 class compThread(threading.Thread):
     def __init__(self,XVals, YVals,zPiezo, zOffset, fluors, noisemaker, laserPowers, intTime, contMode = True,
-                 bufferlength=500, biplane = False, biplane_z = 500, xpiezo=None, ypiezo=None, illumFcn = 'ConstIllum', objects=None):
+                 bufferlength=500, biplane = False, biplane_z = 500, xpiezo=None, ypiezo=None, illumFcn = 'ConstIllum', objects=None, image_generator=None):
         #TODO - Do we need to change the default buffer length. This shouldn't really be an issue as we pause the simulation the buffer starts to fill up.
         
         threading.Thread.__init__(self)
@@ -186,6 +188,9 @@ class compThread(threading.Thread):
         self.bufferWritePos = 0
         self.bufferReadPos = 0
         self.numBufferedImages = 0
+
+        assert(image_generator is not None)
+        self.image_generator = image_generator
 
         self.biplane = biplane
         self.deltaZ = biplane_z
@@ -277,13 +282,13 @@ class compThread(threading.Thread):
                 r_i = np.zeros((len(self.XVals), len(self.YVals)), 'f')
                 for obj in self.objects:
                     if obj.hit_test(roi_bbox):
-                        rend_im.simPalmImFI(self.XVals + xp, self.YVals + yp, zPos,obj,
+                        self.image_generator.simPalmImFI(self.XVals + xp, self.YVals + yp, zPos,obj,
                                                                   laserPowers=self.laserPowers, intTime=self.intTime,
                                                                   position=[xp,yp,zPos], illuminationFunction=self.illumFcn,
                                                                   ChanXOffsets=self.ChanXOffsets, ChanZOffsets=self.ChanZOffsets,
                                                                   ChanSpecs=self.ChanSpecs, im=r_i)
             else:
-                r_i = rend_im.simPalmImFI(self.XVals + xp, self.YVals + yp, zPos,self.fluors,
+                r_i = self.image_generator.simPalmImFI(self.XVals + xp, self.YVals + yp, zPos,self.fluors,
                                                                   laserPowers=self.laserPowers, intTime=self.intTime,
                                                                   position=[xp,yp,zPos], illuminationFunction=self.illumFcn,
                                                                   ChanXOffsets=self.ChanXOffsets, ChanZOffsets=self.ChanZOffsets,
@@ -374,7 +379,9 @@ class FakeCamera(Camera):
             
             self.pixel_size_nm = XVals[1] - XVals[0]
 
-        rend_im.set_pixelsize_nm(self.pixel_size_nm)
+
+        self.image_generator = image_gen.ImageGenerator()
+        self.image_generator.set_pixelsize_nm(self.pixel_size_nm)
 
         self.zPiezo=zPiezo
         self.xPiezo = xpiezo
@@ -485,11 +492,13 @@ class FakeCamera(Camera):
         if self._objects is not None:
             self.compT = compThread(self.XVals[self.ROIx[0]:self.ROIx[1]], self.YVals[self.ROIy[0]:self.ROIy[1]],
                                 self.zPiezo, self.zOffset, None, self.noiseMaker, laserPowers=self.laserPowers,
-                                intTime=self.intTime, xpiezo=self.xPiezo, ypiezo=self.yPiezo, illumFcn=self.illumFcn, objects=self._objects)
+                                intTime=self.intTime, xpiezo=self.xPiezo, ypiezo=self.yPiezo, illumFcn=self.illumFcn, 
+                                objects=self._objects, image_generator=self.image_generator)
         else:
             self.compT = compThread(self.XVals[self.ROIx[0]:self.ROIx[1]], self.YVals[self.ROIy[0]:self.ROIy[1]],
                                 self.zPiezo, self.zOffset, self.fluors, self.noiseMaker, laserPowers=self.laserPowers,
-                                intTime=self.intTime, xpiezo=self.xPiezo, ypiezo=self.yPiezo, illumFcn=self.illumFcn)
+                                intTime=self.intTime, xpiezo=self.xPiezo, ypiezo=self.yPiezo, illumFcn=self.illumFcn,
+                                image_generator=self.image_generator)
 
         try:
             #vx = self.XVals[1] - self.XVals[0]

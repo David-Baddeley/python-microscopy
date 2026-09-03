@@ -67,6 +67,7 @@ py_sources = files(
     'simulation/pointsets.py',
     'simulation/wormlike_curled.py',
     'simulation/locify.py',
+    'simulation/image_gen.py',
 )
 
 py.install_sources(py_sources, subdir:'PYME/simulation')

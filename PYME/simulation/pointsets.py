@@ -13,6 +13,72 @@ class PointSource(HasTraits):
         c = np.zeros_like(x)
         yield np.array([x,y,z,c], 'f').T
 
+class Group(HasTraits):
+    generators = List(Instance(HasTraits))
+
+    def points(self):
+        for g in self.generators:
+            for pts in g.points():
+                yield pts
+
+class AssignChannel(HasTraits):
+    channel = Int(0)
+    generator = Instance(HasTraits)
+
+    def points(self):
+        for pts in self.generator.points():
+            pts[:,3] = self.channel
+            yield pts
+
+class Shift(HasTraits):
+    dx = Float(0)
+    dy = Float(0)
+
+    generator = Instance(HasTraits)
+
+    def points(self):
+        for pts in self.generator.points():
+            pts[:,0] += self.dx
+            pts[:,1] += self.dy
+            yield pts
+
+class RandomShift(HasTraits):
+    magnitude = Float(1000)
+
+    generator = Instance(HasTraits)
+
+    def points(self):
+        dx, dy = np.random.uniform(-self.magnitude, self.magnitude, 2)
+        for pts in self.generator.points():
+            pts[:,0] += dx
+            pts[:,1] += dy
+            yield pts
+
+class RandomDistribution(HasTraits):
+    n_instances = Int(1)
+    region_size = Float(5000)
+    generator = Instance(HasTraits)
+    # force one of the points to be at the origin (dirty hack to make sure there is a structure present in the simulator at startup)
+    force_at_origin = Bool(False)
+
+    def points(self):
+        xp = self.region_size*np.random.uniform(-1, 1, self.n_instances)
+        yp = self.region_size*np.random.uniform(-1, 1, self.n_instances)
+
+        if self.force_at_origin:
+            xp[0] = 0.0
+            yp[0] = 0.0
+
+
+        for xi, yi in zip(xp, yp):
+            for p in self.generator.points():
+                p1 = np.copy(p)
+                p1[:,0] += xi
+                p1[:,1] += yi
+
+                yield p1
+
+
 class RandomSource(PointSource):
     numPoints = Int(100)
     xRange = Float(10000)

@@ -89,7 +89,10 @@ class PYMEMainFrame(acquirebase.PYMEAcquireBase, AUIFrame):
         #self.SetMenuBar(self.menubar)
         #######################
         
-        self.SetClientSize(wx.Size(1020, 800))
+        screen_width, screen_height = wx.GetDisplaySize()
+        
+        self.SetClientSize(wx.Size(int(screen_width*0.8), int(screen_height*0.8)))
+        self.Center()
         
 
         self.statusBar1 = wx.StatusBar(id=wx.ID_ANY,
@@ -99,13 +102,17 @@ class PYMEMainFrame(acquirebase.PYMEAcquireBase, AUIFrame):
 
 
     def __init__(self, parent, options = None):
+        
+
         AUIFrame.__init__(self, id=wx.ID_ANY, name='smiMainFrame',
-              parent=parent, pos=wx.Point(20, 20), size=wx.Size(600, 800),
+              parent=parent, pos=wx.DefaultPosition, size=wx.Size(600, 800),
               style=wx.DEFAULT_FRAME_STYLE, title= getattr(options, 'window_title', 'PYME Acquire'))
         
         acquirebase.PYMEAcquireBase.__init__(self, options, evt_loop=mytimer)
 
         self._create_menu()
+
+        
         
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
 
@@ -129,7 +136,10 @@ class PYMEMainFrame(acquirebase.PYMEAcquireBase, AUIFrame):
 
         self.CreateToolPanel(getattr(options, 'gui_mode', 'default'))
 
-        self.SetSize((1030, 895))
+        #self.SetSize((1030, 895))
+        screen_width, screen_height = wx.GetDisplaySize()
+        self.SetClientSize(wx.Size(int(screen_width*0.8), int(screen_height*0.8)))
+        self.Center()
         
         self.time1 = mytimer.mytimer()
         self.time1.Start(50)

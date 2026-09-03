@@ -10,7 +10,6 @@ py_sources = files(
     '__init__.py',
     'fakeCam.py',
     'lasersliders.py',
-    'dSimControl.py',
     'fluor.py',
     'setup.py',
     'simui_wx.py',
