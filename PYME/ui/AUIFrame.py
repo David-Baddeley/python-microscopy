@@ -54,6 +54,7 @@ class AUIFrame(wx.Frame):
         """
         #if update:
         #    self._mgr.Update()
+        logger.debug(f'Adding page {caption}, select={select}, update={update}, pane0={self.pane0}')
             
         if self.pane0 is None:
             name = caption.replace(' ', '')
@@ -72,7 +73,8 @@ class AUIFrame(wx.Frame):
                               Name(caption.replace(' ', '')).Caption(caption).CloseButton(False).CaptionVisible(False).NotebookPage(pn.notebook_id))
                 if (not select) and len(nbs) > pn.notebook_id:
                     self._mgr.Update()
-                    nbs[pn.notebook_id].SetSelection(currPage)
+                    logger.debug(f'Current page: {currPage}, pane0: {self.pane0}, notebook_id: {pn.notebook_id}')
+                    wx.CallAfter(nbs[pn.notebook_id].SetSelection, currPage)
             else:
                 self._mgr.AddPane(page, aui.AuiPaneInfo().
                               Name(caption.replace(' ', '')).Caption(caption).CloseButton(False).CaptionVisible(False), target=pn)
@@ -80,10 +82,19 @@ class AUIFrame(wx.Frame):
                 
                 if not select:
                     self._mgr.Update()
+                    #wx.CallAfter(self._select_page, 0)
+                    #self._mgr.Update()
                     nb = self._mgr.GetNotebooks()[0]
                     nb.SetSelection(0)
         if update:
             self._mgr.Update()
+
+    def _select_page(self, idx):
+        #self._mgr.Update()
+        logger.debug('selecting page %d' % idx)
+        nb = self._mgr.GetNotebooks()[0]
+        nb.SetSelection(idx)
+
                
         #wx.CallAfter(self._mgr.Update)
         #self.Layout() 
