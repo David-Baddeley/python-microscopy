@@ -75,13 +75,19 @@ class VisGUIFrame(AUIFrame, visCore.VisGUICore):
     with the LMDisplay module used for online display and has been factored out into the visCore module"""
     def __init__(self, parent, filename=None, id=wx.ID_ANY, 
                  title="PYME Visualise", pos=wx.DefaultPosition,
-                 size=(900,750), style=wx.DEFAULT_FRAME_STYLE, use_shaders=True, cmd_args=None, pipeline_vars = {}):
+                 size=None, style=wx.DEFAULT_FRAME_STYLE, use_shaders=True, cmd_args=None, pipeline_vars = {}):
+
+        if size is None:
+            display_width, display_height = wx.GetDisplaySize()
+            size = (int(display_height*0.9+200), int(display_height*0.9))
 
         # populate about box info
         self._component_name = 'PYMEVisualise'
         self._long_desc = "Visualisation of localisation microscopy data."
         
         AUIFrame.__init__(self, parent, id, title, pos, size, style)
+
+        self.Center()
         
         
         self.cmd_args = cmd_args
@@ -121,7 +127,7 @@ class VisGUIFrame(AUIFrame, visCore.VisGUICore):
         #self._mgr.AddPane(self.sh, aui.AuiPaneInfo().
         #                  Name("Shell").Caption("Console").Centre().CloseButton(False).CaptionVisible(False))
 
-        self.AddPage(self.sh, caption='Shell')
+        self.AddPage(self.sh, caption='Shell', select=False)
              
         
         self.elv = None

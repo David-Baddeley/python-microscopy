@@ -78,9 +78,13 @@ class dt(wx.FileDropTarget):
 
 class DSViewFrame(AUIFrame):
     def __init__(self, image,  parent=None, title='', mode='LM', 
-                 size = (800,700), glCanvas=None):
+                 size = None, glCanvas=None):
         self._component_name='PYMEImage'
         
+        if size is None:
+            display_width, display_height = wx.GetDisplaySize()
+            size = (int(display_height*0.8+100), int(display_height*0.8))
+
         AUIFrame.__init__(self,parent, -1, title,size=size, pos=wx.DefaultPosition)
 
         self.mode = mode
@@ -184,7 +188,8 @@ class DSViewFrame(AUIFrame):
         self.Layout()
 
         if 'view' in dir(self):
-            sc = np.floor(np.log2(1.0*self.view.Size[0]/self.do.ds.shape[0]))
+
+            sc = np.floor(np.log2(1.0*self.Size[0]/self.do.ds.shape[0]))
             #print self.view.Size[0], self.do.ds.shape[0], sc
             self.do.SetScale(sc)
             self.view.Refresh()
