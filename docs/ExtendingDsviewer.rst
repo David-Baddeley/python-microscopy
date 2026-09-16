@@ -25,8 +25,8 @@ is located in within that directory will be automatically detected and treated a
 
 .. note::
 
-    ``PYME.DSView.modules`` and ``PYMEnf.DSView.modules`` [#pymenf]_ are currently the only locations where modules will be detected.
-    A more flexible mechanism of module discovery is high on the TODO list.
+    ``PYME.DSView.modules`` and ``PYMEnf.DSView.modules`` [#pymenf]_ are scanned automatically as built-in locations.
+    External packages should register dsviewer plugins via the mechanisms described in :ref:`plugins`.
 
 Plugins **must** implement a function called ``Plug(dsviewer)`` which takes an instance of the current
 :class:`PYME.DSView.dsviewer.DSViewFrame`, and can implement any additional python logic. It is good practice not to put

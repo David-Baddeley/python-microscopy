@@ -45,6 +45,9 @@ data_files = files(
     '_octree.pyx',
     'func_octree.pyx',
     '_treap.pyx',
+    # required by downstream packages (e.g. ch-shrinkwrap) that cdef extern from these files
+    'triangle_mesh_utils.h',
+    'triangle_mesh_utils.c',
 )
 
 install_data(data_files, install_dir: install_dir)

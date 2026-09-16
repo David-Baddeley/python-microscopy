@@ -94,7 +94,7 @@ class CSVOutput(OutputModule):
             if not isinstance(v, pd.DataFrame):
                 v = v.to_pandas()
                 
-            v.to_csv(out_filename)
+            v.to_csv(out_filename, index=False)
 
 @register_module('XLSXOutput')
 class XLSOutput(OutputModule):
@@ -220,7 +220,7 @@ class ImageOutput(OutputModule):
         _ensure_output_directory(out_filename)
         
         v = self.generate(namespace)
-        v.Save(out_filename)
+        v.save(out_filename)
 
 
 @register_module('RGBImageOutput')
