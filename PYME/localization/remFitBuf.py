@@ -395,7 +395,7 @@ class fitTask(taskDef.Task):
         return numpy.concatenate((g.reshape(g.shape[0], -1, 1), r.reshape(g.shape[0], -1, 1)),2)
 
 
-    def __call__(self, gui=False): #, taskQueue=None):
+    def __call__(self, gui=False): #):
         global dBuffer, bBuffer, dataSourceID
         
         # short-circuit if a task is generated for a frame pre-StartAt
